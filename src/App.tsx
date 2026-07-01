@@ -32,6 +32,116 @@ import AdminExpenses from "./components/AdminExpenses";
 import AdminAnnouncements from "./components/AdminAnnouncements";
 import AdminReports from "./components/AdminReports";
 
+const fallbackVehicles: Vehicle[] = [
+  {
+    id: "v1",
+    brand: "FLEETO",
+    model: "Wolf Warrior Lite",
+    descriptionEng: "A rugged and powerful electric scooter featuring dual front forks, aggressive styling, smooth acceleration with a Sine Wave Controller, and dual disc brakes.",
+    descriptionBen: "ডুয়াল ফ্রন্ট ফর্ক, চমৎকার আগ্রাসী স্টাইলিং, সাইন ওয়েভ কন্ট্রোলারের সাথে মসৃণ ত্বরণ এবং ডুয়াল ডিস্ক ব্রেক সহ একটি শক্তিশালী বৈদ্যুতিক স্কুটার।",
+    batteryTypeEng: "60V Lithium-Ion (24Ah / 34Ah) or Lead Acid (32Ah)",
+    batteryTypeBen: "60V লিথিয়াম-আয়ন (24Ah / 34Ah) বা লেড অ্যাসিড (32Ah)",
+    motorPower: "1.0kW Peak Power (Sine Wave)",
+    range: "Up to 100 km",
+    chargingTime: "5 Hours",
+    topSpeed: "55 km/h",
+    colorsEng: "Metallic Blue, Metallic Cherry Red, Metallic Sea Green",
+    colorsBen: "মেটালিক ব্লু, মেটালিক চেরি রেড, মেটালিক সি গ্রিন",
+    warrantyEng: "3 Years on Battery, 1 Year on Motor & Controller",
+    warrantyBen: "ব্যাটারিতে ৩ বছর, মোটর ও কন্ট্রোলারে ১ বছরের ওয়ারেন্টি",
+    price: 68000,
+    offerPrice: 61000,
+    emiPrice: 2100,
+    stockStatus: "In Stock",
+    stockQuantity: 5,
+    images: ["/src/assets/images/fleeto_wolf_warrior_moped_1782481931851.jpg"],
+    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  },
+  {
+    id: "v2",
+    brand: "FLEETO",
+    model: "Panther",
+    descriptionEng: "Smart and sporty electric scooter with 15L of boot space, smart parking switch, multiple speed modes, and flexible battery configurations.",
+    descriptionBen: "১৫ লিটার বুট স্পেস, স্মার্ট পার্কিং সুইচ, একাধিক স্পিড মোড এবং নমনীয় ব্যাটারি কনফিগারেশন সহ স্মার্ট এবং স্পোর্টি বৈদ্যুতিক স্কুটার।",
+    batteryTypeEng: "60 Volts",
+    batteryTypeBen: "৬০ ভোল্ট",
+    motorPower: "1500W BLDC Hub Motor",
+    range: "Upto 80 Kms",
+    chargingTime: "5 Hours",
+    topSpeed: "60 kmph",
+    colorsEng: "Metallic Blue, Blazing Red, Bullet Silver",
+    colorsBen: "মেটালিক ব্লু, ব্লেজিং রেড, বুলেট সিলভার",
+    warrantyEng: "3 Years on Battery, 1 Year on Motor & Controller",
+    warrantyBen: "ব্যাটারিতে ৩ বছর, মোটর ও কন্ট্রোলারে ১ বছরের ওয়ারেন্টি",
+    price: 98000,
+    offerPrice: 92000,
+    emiPrice: 3200,
+    stockStatus: "In Stock",
+    stockQuantity: 3,
+    images: ["/src/assets/images/fleeto_panther_scooter_1782481064099.jpg"],
+    videoUrl: ""
+  }
+];
+
+const fallbackProducts: Product[] = [
+  {
+    id: "p1",
+    titleEng: "Smart LFP Battery 60V 30Ah",
+    titleBen: "স্মার্ট এলএফপি ব্যাটারি 60V 30Ah",
+    category: "Battery",
+    brand: "Sudipta Power",
+    price: 36000,
+    offerPrice: 32500,
+    purchasePrice: 27000,
+    stock: 8,
+    images: ["/src/assets/images/fleeto_60v_30ah_battery_1782482443273.jpg"],
+    descriptionEng: "Ultra durable 60V 30Ah Lithium Ferro Phosphate (LFP) battery in heavy-duty black metal casing with dual handles and smart BMS safety control.",
+    descriptionBen: "স্মার্ট বিএমএস সুরক্ষা নিয়ন্ত্রণ, ডাবল মেটাল হ্যান্ডেল এবং মজবুত ধাতব কেসিং সহ অত্যন্ত টেকসই ৬০ভি ৩০এএইচ লিথিয়াম ফেরো ফসফেট (LFP) ব্যাটারি।"
+  },
+  {
+    id: "p2",
+    titleEng: "SMART EV CONTROLLER",
+    titleBen: "স্মার্ট ইভি কন্ট্রোলার",
+    category: "Controller",
+    brand: "SUDIPTA POWER",
+    price: 3500,
+    offerPrice: 2999,
+    purchasePrice: 1400,
+    stock: 15,
+    images: ["/src/assets/images/sudipta_power_controller_1782484517289.jpg"],
+    descriptionEng: "An EV smart controller is the \"brain\" of your electric vehicle. It converts the DC battery power into usable energy for the motor and manages throttle response, regenerative braking, and safety limits (like overcurrent and overheating protection).",
+    descriptionBen: "একটি ইভি স্মার্ট কন্ট্রোলার হলো আপনার বৈদ্যুতিক গাড়ির 'মস্তিষ্ক'। এটি ডিসি ব্যাটারির শক্তিকে মোটরের জন্য ব্যবহারযোগ্য শক্তিতে রূপান্তরিত করে এবং থ্রটল রেসপন্স, রিজেনারেটিভ ব্রেকিং এবং সুরক্ষা সীমা (যেমন ওভারকারেন্ট এবং ওভারহিটিং প্রতিরোধ) পরিচালনা করে।"
+  },
+  {
+    id: "p3",
+    titleEng: "All-Weather Heavy Duty EV Tubeless Tyre (10x3.0)",
+    titleBen: "অল-ওয়েদার হেভি ডিউটি ইভি টিউবলেস টায়ার (10x3.0)",
+    category: "Tyres",
+    brand: "Ceat EV Zoom",
+    price: 2200,
+    offerPrice: 1753,
+    purchasePrice: 850,
+    stock: 24,
+    images: ["https://images.unsplash.com/photo-1578844251758-2f71da64c96f?w=800&auto=format&fit=crop&q=60"],
+    descriptionEng: "Specially formulated rubber for low rolling resistance and high load capacity in electric scooters.",
+    descriptionBen: "ইলেকট্রিক স্কুটারে কম ঘূর্ণায়মান প্রতিরোধ এবং উচ্চ লোড ক্ষমতার জন্য বিশেষভাবে তৈরি টায়ার।"
+  },
+  {
+    id: "p4",
+    titleEng: "Super Fast Charger 60V 6A with Auto Cut-off",
+    titleBen: "অটো কাট-অফ সহ সুপার ফাস্ট চার্জার 60V 6A",
+    category: "Charger",
+    brand: "Sudipta Power",
+    price: 3200,
+    offerPrice: 2800,
+    purchasePrice: 1950,
+    stock: 12,
+    images: ["/src/assets/images/regenerated_image_1782484212276.jpg"],
+    descriptionEng: "Fast charger with silent fan, voltage protection, and automatic cut-off technology.",
+    descriptionBen: "সাইলেন্ট ফ্যান, ভোল্টেজ সুরক্ষা এবং স্বয়ংক্রিয় কাট-অফ প্রযুক্তি সহ দ্রুত চার্জার।"
+  }
+];
+
 export default function App() {
   // Localization - Default Bengali as requested
   const [lang, setLang] = useState<Language>("bn");
@@ -47,8 +157,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Collections States
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(fallbackVehicles);
+  const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [emiRecords, setEmiRecords] = useState<EmiRecord[]>([]);
@@ -102,16 +212,25 @@ export default function App() {
         fetch("/api/dashboard-stats")
       ]);
 
-      setVehicles(await vRes.json());
-      setProducts(await pRes.json());
-      setCustomers(await cRes.json());
-      setBookings(await bRes.json());
-      setEmiRecords(await eRes.json());
-      setEnquiries(await qRes.json());
-      setAnnouncements(await aRes.json());
-      setExpenses(await xRes.json());
-      setReport(await rRes.json());
-      setStats(await sRes.json());
+      setVehicles(vRes.ok ? await vRes.json() : fallbackVehicles);
+      setProducts(pRes.ok ? await pRes.json() : fallbackProducts);
+      setCustomers(cRes.ok ? await cRes.json() : []);
+      setBookings(bRes.ok ? await bRes.json() : []);
+      setEmiRecords(eRes.ok ? await eRes.json() : []);
+      setEnquiries(qRes.ok ? await qRes.json() : []);
+      setAnnouncements(aRes.ok ? await aRes.json() : []);
+      setExpenses(xRes.ok ? await xRes.json() : []);
+      setReport(rRes.ok ? await rRes.json() : null);
+      setStats(sRes.ok ? await sRes.json() : {
+        totalVehicles: fallbackVehicles.length,
+        totalProducts: fallbackProducts.length,
+        totalCustomers: 0,
+        pendingBookings: 0,
+        activeEmiCount: 0,
+        lowStockCount: 0,
+        totalSales: 0,
+        announcementsCount: 0
+      });
     } catch (err) {
       console.error("Error syncing ERP data:", err);
     }
