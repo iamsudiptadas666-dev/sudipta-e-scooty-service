@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Zap, ShieldCheck, Battery, Gauge, Hourglass, MessageSquare, Compass, Send, Check, Info } from "lucide-react";
 import { Language, TranslationDict } from "../translations";
 import { Vehicle } from "../types";
+import OptimizedImage from "./OptimizedImage";
 
 interface ShowroomCardProps {
   key?: string;
@@ -50,8 +51,8 @@ export default function ShowroomCard({ vehicle, lang, t, onEnquire }: ShowroomCa
     >
       {/* Vehicle image section */}
       <div className="relative h-56 md:h-64 overflow-hidden bg-slate-900">
-        <img
-          src={vehicle.images[0] || "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800"}
+        <OptimizedImage
+          src={vehicle.images[0]}
           alt={`${vehicle.brand} ${vehicle.model}`}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           referrerPolicy="no-referrer"

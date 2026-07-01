@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Language, TranslationDict } from "../translations";
 import { Product } from "../types";
+import OptimizedImage from "./OptimizedImage";
 
 interface PartsCardProps {
   key?: string;
@@ -100,8 +101,8 @@ export default function PartsCard({ product, lang, t }: PartsCardProps) {
         <div>
           {/* Product Image */}
           <div className="relative h-48 rounded-2xl overflow-hidden bg-slate-50 mb-4 border border-slate-100">
-            <img
-              src={product.images[0] || "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=500"}
+            <OptimizedImage
+              src={product.images[0]}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
