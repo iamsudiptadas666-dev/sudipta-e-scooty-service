@@ -54,7 +54,7 @@ const fallbackVehicles: Vehicle[] = [
     emiPrice: 2100,
     stockStatus: "In Stock",
     stockQuantity: 5,
-    images: ["/src/assets/images/fleeto_wolf_warrior_moped_1782481931851.jpg"],
+    images: ["আপনার_ImgBB_লিঙ্ক"],
     videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
   },
   {
