@@ -1304,7 +1304,7 @@ export default function App() {
               <input
                 type="password"
                 required
-                placeholder="Passcode (Default is 9064)"
+                placeholder="Enter Passcode"
                 className="w-full p-2.5 border border-slate-200 rounded-lg text-xs font-mono"
                 value={passcode}
                 onChange={(e) => setPasscode(e.target.value)}
