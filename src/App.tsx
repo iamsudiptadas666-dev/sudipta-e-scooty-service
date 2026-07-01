@@ -94,7 +94,7 @@ const fallbackProducts: Product[] = [
     offerPrice: 32500,
     purchasePrice: 27000,
     stock: 8,
-    images: ["/src/assets/images/fleeto_60v_30ah_battery_1782482443273.jpg"],
+    images: ["https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=60"],
     descriptionEng: "Ultra durable 60V 30Ah Lithium Ferro Phosphate (LFP) battery in heavy-duty black metal casing with dual handles and smart BMS safety control.",
     descriptionBen: "স্মার্ট বিএমএস সুরক্ষা নিয়ন্ত্রণ, ডাবল মেটাল হ্যান্ডেল এবং মজবুত ধাতব কেসিং সহ অত্যন্ত টেকসই ৬০ভি ৩০এএইচ লিথিয়াম ফেরো ফসফেট (LFP) ব্যাটারি।"
   },
@@ -108,7 +108,7 @@ const fallbackProducts: Product[] = [
     offerPrice: 2999,
     purchasePrice: 1400,
     stock: 15,
-    images: ["/src/assets/images/sudipta_power_controller_1782484517289.jpg"],
+    images: ["https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=60"],
     descriptionEng: "An EV smart controller is the \"brain\" of your electric vehicle. It converts the DC battery power into usable energy for the motor and manages throttle response, regenerative braking, and safety limits (like overcurrent and overheating protection).",
     descriptionBen: "একটি ইভি স্মার্ট কন্ট্রোলার হলো আপনার বৈদ্যুতিক গাড়ির 'মস্তিষ্ক'। এটি ডিসি ব্যাটারির শক্তিকে মোটরের জন্য ব্যবহারযোগ্য শক্তিতে রূপান্তরিত করে এবং থ্রটল রেসপন্স, রিজেনারেটিভ ব্রেকিং এবং সুরক্ষা সীমা (যেমন ওভারকারেন্ট এবং ওভারহিটিং প্রতিরোধ) পরিচালনা করে।"
   },
@@ -136,7 +136,7 @@ const fallbackProducts: Product[] = [
     offerPrice: 2800,
     purchasePrice: 1950,
     stock: 12,
-    images: ["/src/assets/images/regenerated_image_1782484212276.jpg"],
+    images: ["https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&auto=format&fit=crop&q=60"],
     descriptionEng: "Fast charger with silent fan, voltage protection, and automatic cut-off technology.",
     descriptionBen: "সাইলেন্ট ফ্যান, ভোল্টেজ সুরক্ষা এবং স্বয়ংক্রিয় কাট-অফ প্রযুক্তি সহ দ্রুত চার্জার।"
   }
@@ -278,8 +278,7 @@ export default function App() {
   // Secure Admin passcode login validation
   const handleAdminAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default secret passcode is Sudipta Das's real passcode matching 9064 (first 4 digits of Sudipta phone number +91 9064517009!)
-    if (passcode === "9064") {
+    if (passcode === "4444") {
       setIsAdmin(true);
       setShowLoginModal(false);
       setLoginError("");
