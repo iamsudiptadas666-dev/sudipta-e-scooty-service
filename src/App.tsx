@@ -32,6 +32,31 @@ import AdminExpenses from "./components/AdminExpenses";
 import AdminAnnouncements from "./components/AdminAnnouncements";
 import AdminReports from "./components/AdminReports";
 
+const readStoredArray = <T,>(key: string, fallback: T[]): T[] => {
+  if (typeof window === "undefined") return fallback;
+
+  try {
+    const storedValue = window.localStorage.getItem(key);
+    if (!storedValue) return fallback;
+
+    const parsedValue = JSON.parse(storedValue) as T[];
+    return Array.isArray(parsedValue) ? parsedValue : fallback;
+  } catch (error) {
+    console.error(`Failed to read ${key} from localStorage`, error);
+    return fallback;
+  }
+};
+
+const persistStoredArray = <T,>(key: string, value: T[]) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error(`Failed to write ${key} to localStorage`, error);
+  }
+};
+
 const fallbackVehicles: Vehicle[] = [
   {
     id: "v1",
@@ -157,12 +182,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Collections States
-  const [vehicles, setVehicles] = useState<Vehicle[]>(fallbackVehicles);
-  const [products, setProducts] = useState<Product[]>(fallbackProducts);
+  const [vehicles, setVehicles] = useState<Vehicle[]>(() => readStoredArray<Vehicle>("scooty_vehicles", fallbackVehicles));
+  const [products, setProducts] = useState<Product[]>(() => readStoredArray<Product>("scooty_products", fallbackProducts));
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [emiRecords, setEmiRecords] = useState<EmiRecord[]>([]);
-  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
+  const [enquiries, setEnquiries] = useState<Enquiry[]>(() => readStoredArray<Enquiry>("customer_enquiries", []));
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [report, setReport] = useState<ReportData | null>(null);
@@ -196,6 +221,21 @@ export default function App() {
   // Active calculator/tools widget tab
   const [activeCalcTab, setActiveCalcTab] = useState<"emi" | "battery">("emi");
 
+  const persistVehicles = (nextVehicles: Vehicle[]) => {
+    setVehicles(nextVehicles);
+    persistStoredArray("scooty_vehicles", nextVehicles);
+  };
+
+  const persistProducts = (nextProducts: Product[]) => {
+    setProducts(nextProducts);
+    persistStoredArray("scooty_products", nextProducts);
+  };
+
+  const persistEnquiries = (nextEnquiries: Enquiry[]) => {
+    setEnquiries(nextEnquiries);
+    persistStoredArray("customer_enquiries", nextEnquiries);
+  };
+
   // Load overall collections from API
   const fetchAllData = async () => {
     try {
@@ -212,12 +252,25 @@ export default function App() {
         fetch("/api/dashboard-stats")
       ]);
 
-      setVehicles(vRes.ok ? await vRes.json() : fallbackVehicles);
-      setProducts(pRes.ok ? await pRes.json() : fallbackProducts);
+      const nextVehicles = vRes.ok ? await vRes.json() : null;
+      if (Array.isArray(nextVehicles)) {
+        persistVehicles(nextVehicles as Vehicle[]);
+      }
+
+      const nextProducts = pRes.ok ? await pRes.json() : null;
+      if (Array.isArray(nextProducts)) {
+        persistProducts(nextProducts as Product[]);
+      }
+
       setCustomers(cRes.ok ? await cRes.json() : []);
       setBookings(bRes.ok ? await bRes.json() : []);
       setEmiRecords(eRes.ok ? await eRes.json() : []);
-      setEnquiries(qRes.ok ? await qRes.json() : []);
+
+      const nextEnquiries = qRes.ok ? await qRes.json() : null;
+      if (Array.isArray(nextEnquiries)) {
+        persistEnquiries(nextEnquiries as Enquiry[]);
+      }
+
       setAnnouncements(aRes.ok ? await aRes.json() : []);
       setExpenses(xRes.ok ? await xRes.json() : []);
       setReport(rRes.ok ? await rRes.json() : null);
@@ -247,29 +300,27 @@ export default function App() {
 
     setSubmittingBooking(true);
     try {
-      const response = await fetch("/api/enquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: clientName,
-          phone: clientPhone,
-          vehicleId: selectedScooter?.id || undefined,
-          type: bookingType,
-          message: clientMsg || `Interested in E-Scooty / battery. Requesting callback.`
-        })
-      });
+      const enquiryPayload: Enquiry = {
+        id: `enq-${Date.now()}`,
+        name: clientName,
+        phone: clientPhone,
+        email: "",
+        vehicleId: selectedScooter?.id || undefined,
+        type: bookingType,
+        message: clientMsg || `Interested in E-Scooty / battery. Requesting callback.`,
+        status: "New",
+        createdAt: new Date().toISOString()
+      };
 
-      if (response.ok) {
-        setBookingSuccess(true);
-        // Clear forms
-        setClientName("");
-        setClientPhone("");
-        setClientMsg("");
-        // Reload leads to admin instantly
-        fetchAllData();
-      }
+      persistEnquiries([enquiryPayload, ...enquiries]);
+      setBookingSuccess(true);
+      setClientName("");
+      setClientPhone("");
+      setClientMsg("");
+      window.alert(lang === "bn" ? "আপনার enquiry/টেস্ট রাইড অনুরোধ স্থানীয়ভাবে সংরক্ষিত হয়েছে।" : "Your enquiry request has been saved locally.");
     } catch (error) {
       console.error(error);
+      window.alert(lang === "bn" ? "অনুরোধ সংরক্ষণে সমস্যা হয়েছে।" : "There was a problem saving your request.");
     } finally {
       setSubmittingBooking(false);
     }
@@ -290,52 +341,116 @@ export default function App() {
 
   // Admin CMS endpoints proxy triggers
   const handleAddVehicle = async (vehicleData: Omit<Vehicle, "id">) => {
-    await fetch("/api/vehicles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(vehicleData)
+    const newVehicle: Vehicle = {
+      ...vehicleData,
+      id: `v-${Date.now()}`
+    } as Vehicle;
+
+    setVehicles((prevVehicles) => {
+      const nextVehicles = [newVehicle, ...prevVehicles];
+      persistStoredArray("scooty_vehicles", nextVehicles);
+      return nextVehicles;
     });
-    fetchAllData();
+
+    try {
+      await fetch("/api/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(vehicleData)
+      });
+    } catch (error) {
+      console.error("Vehicle save fallback failed", error);
+    }
   };
 
   const handleUpdateVehicle = async (id: string, vehicleData: Partial<Vehicle>) => {
-    await fetch(`/api/vehicles/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(vehicleData)
+    setVehicles((prevVehicles) => {
+      const nextVehicles = prevVehicles.map((vehicle) => vehicle.id === id ? { ...vehicle, ...vehicleData } : vehicle);
+      persistStoredArray("scooty_vehicles", nextVehicles);
+      return nextVehicles;
     });
-    fetchAllData();
+
+    try {
+      await fetch(`/api/vehicles/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(vehicleData)
+      });
+    } catch (error) {
+      console.error("Vehicle update fallback failed", error);
+    }
   };
 
   const handleDeleteVehicle = async (id: string) => {
     if (confirm(lang === "bn" ? "আপনি কি নিশ্চিতভাবে এই মডেলটি মুছে ফেলতে চান?" : "Are you sure you want to delete this vehicle model?")) {
-      await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
-      fetchAllData();
+      setVehicles((prevVehicles) => {
+        const nextVehicles = prevVehicles.filter((vehicle) => vehicle.id !== id);
+        persistStoredArray("scooty_vehicles", nextVehicles);
+        return nextVehicles;
+      });
+
+      try {
+        await fetch(`/api/vehicles/${id}`, { method: "DELETE" });
+      } catch (error) {
+        console.error("Vehicle delete fallback failed", error);
+      }
     }
   };
 
   const handleAddProduct = async (productData: Omit<Product, "id">) => {
-    await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(productData)
+    const newProduct: Product = {
+      ...productData,
+      id: `p-${Date.now()}`
+    } as Product;
+
+    setProducts((prevProducts) => {
+      const nextProducts = [newProduct, ...prevProducts];
+      persistStoredArray("scooty_products", nextProducts);
+      return nextProducts;
     });
-    fetchAllData();
+
+    try {
+      await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData)
+      });
+    } catch (error) {
+      console.error("Product save fallback failed", error);
+    }
   };
 
   const handleUpdateProduct = async (id: string, productData: Partial<Product>) => {
-    await fetch(`/api/products/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(productData)
+    setProducts((prevProducts) => {
+      const nextProducts = prevProducts.map((product) => product.id === id ? { ...product, ...productData } : product);
+      persistStoredArray("scooty_products", nextProducts);
+      return nextProducts;
     });
-    fetchAllData();
+
+    try {
+      await fetch(`/api/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData)
+      });
+    } catch (error) {
+      console.error("Product update fallback failed", error);
+    }
   };
 
   const handleDeleteProduct = async (id: string) => {
     if (confirm(lang === "bn" ? "আপনি কি নিশ্চিতভাবে এই খুচরা যন্ত্রাংশটি স্টক থেকে সরাতে চান?" : "Are you sure you want to remove this spare part?")) {
-      await fetch(`/api/products/${id}`, { method: "DELETE" });
-      fetchAllData();
+      setProducts((prevProducts) => {
+        const nextProducts = prevProducts.filter((product) => product.id !== id);
+        persistStoredArray("scooty_products", nextProducts);
+        return nextProducts;
+      });
+
+      try {
+        await fetch(`/api/products/${id}`, { method: "DELETE" });
+      } catch (error) {
+        console.error("Product delete fallback failed", error);
+      }
     }
   };
 
@@ -1197,7 +1312,7 @@ export default function App() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Joydeb Das"
+                    placeholder="Enter your full name"
                     className="w-full p-2.5 border border-slate-200 rounded-lg text-xs"
                     value={clientName}
                     onChange={(e) => setClientName(e.target.value)}
@@ -1209,7 +1324,7 @@ export default function App() {
                   <input
                     type="tel"
                     required
-                    placeholder="e.g. +91 9064517009"
+                    placeholder="Enter your phone number"
                     className="w-full p-2.5 border border-slate-200 rounded-lg text-xs font-mono"
                     value={clientPhone}
                     onChange={(e) => setClientPhone(e.target.value)}
@@ -1233,7 +1348,7 @@ export default function App() {
                   <label className="block text-xs font-semibold text-slate-500 mb-1.5">{t.message}</label>
                   <textarea
                     className="w-full p-2.5 border border-slate-200 rounded-lg text-xs h-20"
-                    placeholder="e.g. I want to book a physical test ride at the Ashoknagar workshop."
+                    placeholder="Enter your message or description"
                     value={clientMsg}
                     onChange={(e) => setClientMsg(e.target.value)}
                   />

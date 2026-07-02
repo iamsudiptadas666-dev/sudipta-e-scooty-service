@@ -2,6 +2,40 @@ import React, { useState } from "react";
 import { Sparkles, Zap, Phone, MapPin, Send } from "lucide-react";
 import { Language, TranslationDict } from "../translations";
 
+interface AiLogEntry {
+  id: string;
+  query: string;
+  response: string;
+  source: string;
+  createdAt: string;
+  language: Language;
+}
+
+const readAiLogs = (): AiLogEntry[] => {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const storedValue = window.localStorage.getItem("ai_logs");
+    if (!storedValue) return [];
+
+    const parsedValue = JSON.parse(storedValue);
+    return Array.isArray(parsedValue) ? parsedValue : [];
+  } catch (error) {
+    console.error("Failed to read ai_logs from localStorage", error);
+    return [];
+  }
+};
+
+const persistAiLogs = (entries: AiLogEntry[]) => {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem("ai_logs", JSON.stringify(entries));
+  } catch (error) {
+    console.error("Failed to write ai_logs to localStorage", error);
+  }
+};
+
 interface DiagnosticAssistantProps {
   lang: Language;
   t: TranslationDict;
@@ -17,6 +51,8 @@ export default function DiagnosticAssistant({ lang, t }: DiagnosticAssistantProp
     e.preventDefault();
     if (!query.trim()) return;
 
+    const trimmedQuery = query.trim();
+
     setLoading(true);
     setResponse(null);
 
@@ -24,21 +60,51 @@ export default function DiagnosticAssistant({ lang, t }: DiagnosticAssistantProp
       const res = await fetch("/api/gemini/diagnose", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, language: lang })
+        body: JSON.stringify({ query: trimmedQuery, language: lang })
       });
+
       const data = await res.json();
-      setResponse(data.diagnosis);
-      setSource(data.source);
+      const nextResponse = data?.diagnosis || (lang === "bn" ? "রোগ নির্ণয় সংক্রান্ত উত্তর পাওয়া যায়নি।" : "No diagnosis response could be generated.");
+      const nextSource = data?.source || "Local fallback";
+
+      setResponse(nextResponse);
+      setSource(nextSource);
+
+      const nextEntry: AiLogEntry = {
+        id: `ai-${Date.now()}`,
+        query: trimmedQuery,
+        response: nextResponse,
+        source: nextSource,
+        createdAt: new Date().toISOString(),
+        language: lang
+      };
+
+      const existingLogs = readAiLogs();
+      persistAiLogs([nextEntry, ...existingLogs]);
+      window.alert(lang === "bn" ? "আপনার AI নির্ণয় অনুরোধ সফলভাবে স্থানীয়ভাবে সংরক্ষিত হয়েছে।" : "Your AI diagnostic request has been saved locally.");
     } catch (error) {
       console.error(error);
-      setResponse(
-        lang === "bn"
-          ? "দুঃখিত, রোগ নির্ণয় করতে সমস্যা হয়েছে। দয়া করে সুদীপ্ত বাবুকে সরাসরি ফোন করুন।"
-          : "Sorry, diagnosing failed. Please call Sudipta Das directly."
-      );
+      const fallbackResponse = lang === "bn"
+        ? "দুঃখিত, রোগ নির্ণয় করতে সমস্যা হয়েছে। দয়া করে সুদীপ্ত বাবুকে সরাসরি ফোন করুন।"
+        : "Sorry, diagnosing failed. Please call Sudipta Das directly.";
+      setResponse(fallbackResponse);
       setSource("Fallback");
+
+      const nextEntry: AiLogEntry = {
+        id: `ai-${Date.now()}`,
+        query: trimmedQuery,
+        response: fallbackResponse,
+        source: "Fallback",
+        createdAt: new Date().toISOString(),
+        language: lang
+      };
+
+      const existingLogs = readAiLogs();
+      persistAiLogs([nextEntry, ...existingLogs]);
+      window.alert(lang === "bn" ? "AI নির্ণয় অনুরোধ রিজার্ভ মোডে স্থানীয়ভাবে সংরক্ষিত হয়েছে।" : "AI diagnostic request has been saved locally in fallback mode.");
     } finally {
       setLoading(false);
+      setQuery("");
     }
   };
 
