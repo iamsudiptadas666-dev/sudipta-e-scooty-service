@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { Order, OrderUpdate } from '../types';
 import { useDashboardRefresh, triggerDashboardRefresh } from '../hooks/useDashboardRefresh';
-import { updateOrderStatusInSupabase, saveOrderToSupabase, softDeleteOrderInSupabase, getOrdersFromSupabase, supabase, isSupabaseConfigured } from '../lib/supabase';
+import { updateOrderInSupabase, deleteOrderInSupabase, getOrdersFromSupabase, supabase, isSupabaseConfigured } from '../lib/supabase';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -50,21 +50,10 @@ const LogisticsConfigForm: React.FC<LogisticsConfigFormProps> = ({ order, isBng,
     setLoading(true);
     try {
       if (deliveryMethod === 'Self') {
-        const res = await fetch(`/api/orders/${order.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            status: "Out for Delivery",
-            deliveryMethod: 'Self',
-            selectedCarrier: 'Own Fleet',
-            awbNumber: 'INTERNAL-SELF',
-            deliveryLogStatus: 'Out for Delivery',
-            notes: notes || "",
-            deliveryPartnerName: "Own Fleet",
-            deliveryPartnerPhone: "N/A"
-          })
+        const result = await updateOrderInSupabase(order.id, {
+          status: "Out for Delivery",
         });
-        if (res.ok) {
+        if (result.ok || result.notFound) {
           alert(isBng ? "নিজস্ব ফ্লিট ডেলিভারি সফলভাবে সেট করা হয়েছে!" : "Assigned to Self Delivery successfully!");
           onSuccess('INTERNAL-SELF');
         } else {
@@ -331,35 +320,27 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ lang, orders: initialO
   const fetchOrders = useCallback(async (showLoader = false) => {
     if (showLoader) setLoading(true);
     try {
-      const res = await fetch(`/api/orders?_t=${Date.now()}`);
+      const filterActive = (o: any) =>
+        o && o.id &&
+        !deletedIdsRef.current.has(o.id) &&
+        !o.isDeleted &&
+        !o.is_deleted &&
+        o.status !== 'deleted';
+
       let serverOrders: Order[] = [];
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          serverOrders = data.filter((o: any) => 
-            o && o.id && 
-            !deletedIdsRef.current.has(o.id) && 
-            !o.isDeleted && 
-            !o.is_deleted && 
-            o.status !== 'deleted'
-          );
-        }
-      }
 
       if (isSupabaseConfigured) {
         const dbOrders = await getOrdersFromSupabase();
-        if (Array.isArray(dbOrders) && dbOrders.length > 0) {
-          const activeDbOrders = dbOrders.filter((o: any) => 
-            o && o.id && 
-            !deletedIdsRef.current.has(o.id) && 
-            !o.isDeleted && 
-            !o.is_deleted && 
-            o.status !== 'deleted'
-          );
-          const map = new Map<string, Order>();
-          serverOrders.forEach(o => map.set(o.id, o));
-          activeDbOrders.forEach(o => map.set(o.id, o));
-          serverOrders = Array.from(map.values());
+        if (Array.isArray(dbOrders)) {
+          serverOrders = dbOrders.filter(filterActive);
+        }
+      } else {
+        const res = await fetch(`/api/orders?_t=${Date.now()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            serverOrders = data.filter(filterActive);
+          }
         }
       }
 
@@ -414,11 +395,8 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ lang, orders: initialO
       setOrders(prev => prev.filter(o => o.id !== orderId));
 
       try {
-        await softDeleteOrderInSupabase(orderId);
-        const res = await fetch(`/api/orders/${orderId}`, { method: "DELETE" });
-        if (res.ok) {
-          triggerDashboardRefresh();
-        }
+        await deleteOrderInSupabase(orderId);
+        triggerDashboardRefresh();
       } catch (err) {
         console.error("Delete order error:", err);
       }
@@ -574,21 +552,8 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ lang, orders: initialO
       // Update local state immediately
       setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patchData } : o));
 
-      // Update Supabase
-      if (updates.status) {
-        updateOrderStatusInSupabase(id, updates.status);
-      }
-      const currentOrder = orders.find(o => o.id === id);
-      if (currentOrder) {
-        saveOrderToSupabase({ ...currentOrder, ...patchData });
-      }
-
-      const res = await fetch(`/api/orders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patchData)
-      });
-      if (res.ok) {
+      const result = await updateOrderInSupabase(id, patchData);
+      if (result.ok || result.notFound) {
         setEditingId(null);
         triggerDashboardRefresh();
       }
@@ -1426,17 +1391,8 @@ export const AdminOrders: React.FC<AdminOrdersProps> = ({ lang, orders: initialO
                   onClick={async () => {
                     try {
                       if (deliveryMethod === 'Self') {
-                         await fetch(`/api/orders/${selectedShipmentOrderId}`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ 
-                              status: "Out for Delivery",
-                              deliveryMethod: 'Self',
-                              selectedCarrier: 'Own Fleet',
-                              awbNumber: 'INTERNAL-SELF',
-                              deliveryLogStatus: 'Out for Delivery',
-                              notes: shipmentNotes 
-                            })
+                         await updateOrderInSupabase(selectedShipmentOrderId!, {
+                           status: "Out for Delivery",
                          });
                          alert("Assigned to Self Delivery!");
                       } else {

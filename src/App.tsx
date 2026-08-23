@@ -54,7 +54,8 @@ import {
   getSettingsFromSupabase, saveSettingsToSupabase,
   getOrdersFromSupabase, saveOrderToSupabase, softDeleteOrderInSupabase,
   getCustomersFromSupabase, saveCustomerToSupabase, softDeleteCustomerInSupabase, deleteCustomerFromSupabase,
-  getBookingsFromSupabase, saveBookingToSupabase, softDeleteBookingInSupabase
+  getBookingsFromSupabase, saveBookingToSupabase, softDeleteBookingInSupabase,
+  isSupabaseConfigured
 } from "./lib/supabase";
 import { AdminSupport } from "./components/AdminSupport";
 import { AdminStaff } from "./components/AdminStaff";
@@ -564,7 +565,9 @@ export default function App() {
         safeFetchJson("/api/globalConfig", {}),
         safeFetchJson("/api/testimonials", []),
         safeFetchJson("/api/offline-transactions", []),
-        safeFetchJson(`/api/orders?_t=${Date.now()}`, [])
+        isSupabaseConfigured
+          ? (getOrdersFromSupabase().then(d => d ?? []))
+          : safeFetchJson(`/api/orders?_t=${Date.now()}`, [])
       ]);
 
       if (Array.isArray(vehiclesData) && vehiclesData.length > 0) {

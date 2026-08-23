@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Vehicle, Product, Order } from "../types";
 import { Language, TranslationDict } from "../translations";
 import { triggerDashboardRefresh } from "../hooks/useDashboardRefresh";
+import { saveOrderToSupabase, updateOrderInSupabase, isSupabaseConfigured } from "../lib/supabase";
 import { 
   Zap, 
   ShieldCheck, 
@@ -101,7 +102,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, lang, onClose, f
     if (phone.length !== 10 || !/^\d+$/.test(phone)) return;
     setLoading(true);
     try {
-      const orderData: Partial<Order> = {
+      const orderId = `ord_${Date.now()}`;
+      const newOrder: Order = {
+        id: orderId,
+        customerId: '',
         customerName: name,
         customerPhone: phone,
         customerAddress: address,
@@ -112,20 +116,34 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, lang, onClose, f
           price: finalPrice
         }],
         totalAmount: grandTotal,
+        status: 'Pending Verification',
+        expectedDeliveryDate: '',
+        expectedDeliveryTime: '',
+        deliveryPartnerName: '',
+        deliveryPartnerPhone: '',
         notes: `Instant UPI Checkout from Detail Page`,
+        createdAt: new Date().toISOString(),
       };
 
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      });
+      let created = false;
+      if (isSupabaseConfigured) {
+        created = await saveOrderToSupabase(newOrder);
+      } else {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newOrder)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setCreatedOrder(data);
+          created = true;
+        }
+      }
 
-      if (res.ok) {
-        const data = await res.json();
-        setCreatedOrder(data);
+      if (created) {
+        if (isSupabaseConfigured) setCreatedOrder(newOrder);
         setStep("payment");
-        // Instantly notify dashboard of the new manual verification order!
         triggerDashboardRefresh();
       }
     } catch (err) {
@@ -143,22 +161,11 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ product, lang, onClose, f
     setLoading(true);
     try {
       const patchData = {
-        utrNumber: utrNumber || undefined,
-        paymentScreenshot: paymentScreenshot || undefined,
-        paymentProof: paymentScreenshot || undefined,
         status: "Pending Verification"
       };
-      const res = await fetch(`/api/orders/${createdOrder.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patchData)
-      });
-      if (res.ok) {
-        setStep("success");
-        triggerDashboardRefresh();
-      } else {
-        setStep("success");
-      }
+      await updateOrderInSupabase(createdOrder.id, patchData);
+      setStep("success");
+      triggerDashboardRefresh();
     } catch (err) {
       console.error("Failed to patch order", err);
       setStep("success");

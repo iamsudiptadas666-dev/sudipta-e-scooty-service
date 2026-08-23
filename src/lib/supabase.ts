@@ -339,7 +339,7 @@ export async function saveOrderToSupabase(order: Record<string, any>) {
       status: order.status || 'Pending',
       previous_status: order.previousStatus || order.previous_status || null,
       payment_method: order.paymentMethod || order.payment_method || 'COD',
-      shipping_address: order.shippingAddress || order.shipping_address || '',
+      shipping_address: order.shippingAddress || order.shipping_address || order.customerAddress || '',
       is_deleted: Boolean(order.is_deleted ?? order.isDeleted ?? false),
       created_at: order.created_at || order.createdAt || new Date().toISOString()
     };
@@ -353,48 +353,93 @@ export async function saveOrderToSupabase(order: Record<string, any>) {
   }
 }
 
-export async function updateOrderStatusInSupabase(orderId: string, status: string) {
-  if (!isSupabaseConfigured) return false;
+/** Map frontend order fields to Supabase snake_case columns only */
+function mapOrderUpdatesToSupabase(updates: Record<string, any>): Record<string, any> {
+  const payload: Record<string, any> = {};
+
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.previousStatus !== undefined || updates.previous_status !== undefined) {
+    payload.previous_status = updates.previousStatus ?? updates.previous_status;
+  }
+  if (updates.paymentMethod !== undefined || updates.payment_method !== undefined) {
+    payload.payment_method = updates.paymentMethod ?? updates.payment_method;
+  }
+  const address = updates.shippingAddress ?? updates.shipping_address ?? updates.customerAddress;
+  if (address !== undefined) payload.shipping_address = address;
+  if (updates.customerName !== undefined || updates.customer_name !== undefined) {
+    payload.customer_name = updates.customerName ?? updates.customer_name;
+  }
+  if (updates.customerPhone !== undefined || updates.customer_phone !== undefined) {
+    payload.customer_phone = updates.customerPhone ?? updates.customer_phone;
+  }
+  if (updates.customerEmail !== undefined || updates.customer_email !== undefined) {
+    payload.customer_email = updates.customerEmail ?? updates.customer_email;
+  }
+  if (updates.totalAmount !== undefined || updates.total_amount !== undefined) {
+    payload.total_amount = Number(updates.totalAmount ?? updates.total_amount);
+  }
+  if (updates.items !== undefined) payload.items = updates.items;
+
+  return payload;
+}
+
+export async function updateOrderInSupabase(
+  orderId: string,
+  updates: Record<string, any>
+): Promise<{ ok: boolean; notFound?: boolean; skipped?: boolean }> {
+  if (!isSupabaseConfigured || !orderId) return { ok: false, skipped: true };
+
+  const updateData = mapOrderUpdatesToSupabase(updates);
+  if (Object.keys(updateData).length === 0) return { ok: true, skipped: true };
+
   try {
-    let { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
-      .update({ status })
-      .eq('id', orderId);
+      .update(updateData)
+      .eq('id', orderId)
+      .select('id')
+      .maybeSingle();
 
     if (error) {
-      const fallback = await supabase
-        .from('orders')
-        .update({ status })
-        .eq('order_id', orderId);
-      error = fallback.error;
+      console.warn("Supabase order update error:", error.message);
+      return { ok: false };
     }
-
-    if (error) console.error("Supabase order status update error:", error.message);
-    return !error;
+    if (!data) {
+      console.warn(`Order ${orderId} not found in Supabase; treating as local-only`);
+      return { ok: false, notFound: true };
+    }
+    return { ok: true };
   } catch (err) {
-    console.error("Error updating order status in Supabase:", err);
+    console.warn("Error updating order in Supabase:", err);
+    return { ok: false };
+  }
+}
+
+export async function updateOrderStatusInSupabase(orderId: string, status: string) {
+  const result = await updateOrderInSupabase(orderId, { status });
+  return result.ok;
+}
+
+export async function deleteOrderInSupabase(orderId: string): Promise<boolean> {
+  if (!isSupabaseConfigured || !orderId) return false;
+  try {
+    const { error } = await supabase
+      .from('orders')
+      .update({ is_deleted: true })
+      .eq('id', orderId);
+    if (error) {
+      console.warn("Supabase order delete error:", error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("Error deleting order in Supabase:", err);
     return false;
   }
 }
 
 export async function softDeleteOrderInSupabase(orderId: string) {
-  if (!isSupabaseConfigured) return false;
-  try {
-    let { error } = await supabase
-      .from('orders')
-      .update({ is_deleted: true, status: 'deleted', updated_at: new Date().toISOString() })
-      .eq('id', orderId);
-
-    if (error) {
-      const fallback = await supabase.from('orders').update({ is_deleted: true }).eq('id', orderId);
-      error = fallback.error;
-    }
-    if (error) console.error("Supabase order delete error:", error.message);
-    return !error;
-  } catch (err) {
-    console.error("Error soft deleting order in Supabase:", err);
-    return false;
-  }
+  return deleteOrderInSupabase(orderId);
 }
 
 export async function restoreOrderInSupabase(orderId: string, status = 'Delivered') {

@@ -8,6 +8,7 @@ import {
 import { Language, TranslationDict } from "../translations";
 import { DashboardStats, Product, Vehicle, Enquiry, Order, SupportTicket } from "../types";
 import { triggerDashboardRefresh } from "../hooks/useDashboardRefresh";
+import { updateOrderInSupabase } from "../lib/supabase";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -111,12 +112,8 @@ export default function AdminDashboard({
     };
 
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patchData)
-      });
-      if (res.ok) {
+      const result = await updateOrderInSupabase(orderId, patchData);
+      if (result.ok || result.notFound) {
         triggerDashboardRefresh();
       }
     } catch (err) {
