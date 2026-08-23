@@ -1,0 +1,6 @@
+{
+  "name": "Sudipta E-Scooty Service",
+  "description": "A premium, modern full-stack Business ERP and customer facing website for Sudipta E-Scooty Service.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - Sudipta E-Scooty Service</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 15mm 15mm 20mm 15mm;
+            @bottom-center {
+                content: "Sudipta E-Scooty Service • হেল্পলাইন: +91 9064517009";
+                font-family: 'Arial', sans-serif;
+                font-size: 8.5pt;
+                color: #718096;
+            }
+        }
+        
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #2d3748;
+            background-color: #ffffff;
+            line-height: 1.4;
+            font-size: 9.5pt;
+        }
+
+        .header-container {
+            margin-bottom: 20px;
+        }
+
+        .table-layout {
+            display: table;
+            width: 100%;
+        }
+
+        .table-row {
+            display: table-row;
+        }
+
+        .table-cell {
+            display: table-cell;
+            vertical-align: top;
+        }
+
+        .w-60 {
+            width: 63%;
+        }
+
+        .w-40 {
+            width: 37%;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .brand-title {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin: 0 0 2px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-subtitle {
+            font-size: 8.5pt;
+            color: #4a5568;
+            margin: 0 0 12px 0;
+            font-weight: bold;
+            letter-spacing: 0.3px;
+        }
+
+        .invoice-title {
+            font-size: 26pt;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 0 0 5px 0;
+            letter-spacing: 0.5px;
+        }
+
+        .info-block {
+            font-size: 9pt;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .divider {
+            border-top: 2px solid #3182ce;
+            margin: 15px 0;
+        }
+
+        .section-title {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #cbd5e1;
+            padding-bottom: 4px;
+        }
+
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .item-table th {
+            background-color: #2b6cb0;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: left;
+            padding: 10px;
+            font-size: 9pt;
+        }
+
+        .item-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 9.5pt;
+            vertical-align: top;
+        }
+
+        .item-subtext {
+            font-size: 8pt;
+            color: #718096;
+            margin-top: 3px;
+        }
+
+        .totals-table {
+            width: 250px;
+            margin-left: auto;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+
+        .totals-table td {
+            padding: 6px 10px;
+            font-size: 9.5pt;
+        }
+
+        .totals-table .label {
+            text-align: right;
+            color: #4a5568;
+        }
+
+        .totals-table .value {
+            text-align: right;
+            font-weight: bold;
+            width: 90px;
+        }
+
+        .totals-table .grand-total-row td {
+            border-top: 2px solid #3182ce;
+            border-bottom: 2px solid #3182ce;
+            padding: 8px 10px;
+            background-color: #ebf8ff;
+        }
+
+        .totals-table .grand-total-label {
+            color: #2b6cb0;
+            font-weight: bold;
+        }
+
+        .totals-table .grand-total-value {
+            color: #2b6cb0;
+            font-weight: bold;
+        }
+
+        .contact-section {
+            border-top: 1px solid #cbd5e1;
+            padding-top: 15px;
+            margin-top: 30px;
+        }
+
+        .contact-title {
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin-bottom: 8px;
+        }
+
+        .contact-grid {
+            font-size: 9pt;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .thank-you-box {
+            text-align: center;
+            margin-top: 35px;
+            font-weight: bold;
+            color: #2b6cb0;
+            font-size: 10.5pt;
+        }
+
+        .disclaimer {
+            font-size: 8pt;
+            color: #a0aec0;
+            text-align: right;
+            margin-top: -20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="table-layout">
+            <div class="table-row">
+                <div class="table-cell w-60">
+                    <h1 class="brand-title">SUDIPTA E-SCOOTY SERVICE</h1>
+                    <div class="brand-subtitle">ELECTRIC SCOOTER SALES, REPAIRS & BATTERY SPECIALIST</div>
+                    <div class="info-block">
+                        <strong>ওয়ার্কশপ ঠিকানা:</strong><br>
+                        পাওয়ার হাউস রোড, কালোবাড়ি-র দিক,<br>
+                        বাঘাযতীন খেলার মাঠ সংলগ্ন উত্তর পার্শ্বে,<br>
+                        অশোকনগর, উত্তর ২৪ পরগনা<br>
+                        <strong>কাজের সময়:</strong> সকাল ১০:০০ - রাত ০৮:৩০ (বৃহস্পতিবার বন্ধ)
+                    </div>
+                </div>
+                <div class="table-cell w-40 text-right">
+                    <h2 class="invoice-title">INVOICE</h2>
+                    <div class="info-block" style="line-height: 1.6;">
+                        <strong>Invoice No:</strong> INV-2026-0001<br>
+                        <strong>Date:</strong> 2026-07-07
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="details-container">
+        <div class="table-layout">
+            <div class="table-row">
+                <div class="table-cell" style="width: 48%;">
+                    <div class="section-title">BILL TO (গ্রাহকের বিবরণ)</div>
+                    <div class="info-block">
+                        <strong>Name:</strong> MR BUBAI GAYASUDDIN<br>
+                        <strong>Phone:</strong> +91 9093238371
+                    </div>
+                </div>
+                <div class="table-cell" style="width: 4%;">&nbsp;</div>
+                <div class="table-cell" style="width: 48%;">
+                    <div class="section-title">VEHICLE DETAILS (গাড়ির বিবরণ)</div>
+                    <div class="info-block">
+                        <strong>Model/Vehicle:</strong> GHALO 1000V2<br>
+                        <strong>Service Type:</strong> Repair & Maintenance
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="item-table">
+        <thead>
+            <tr>
+                <th style="width: 5%; text-align: center;">#</th>
+                <th style="width: 55%;">ITEM DESCRIPTION (কাজের/পার্টসের বিবরণ)</th>
+                <th style="width: 15%; text-align: right;">PRICE (মূল্য)</th>
+                <th style="width: 10%; text-align: center;">QTY (পরিমাণ)</th>
+                <th style="width: 15%; text-align: right;">TOTAL (মোট)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="text-align: center;">1</td>
+                <td>
+                    <strong>EV Diagnostic & Repair Labor Charge</strong>
+                    <div class="item-subtext">ইভি ডায়াগনস্টিক এবং লেবার সার্ভিসিং চার্জ</div>
+                </td>
+                <td style="text-align: right;">₹0.00</td>
+                <td style="text-align: center;">1</td>
+                <td style="text-align: right;">₹0.00</td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">2</td>
+                <td>
+                    <strong>EV Smart Charger Repairing & Service</strong>
+                    <div class="item-subtext">স্মার্ট চার্জার সার্ভিসিং এবং যন্ত্রাংশ মেরামত</div>
+                </td>
+                <td style="text-align: right;">₹650.00</td>
+                <td style="text-align: center;">1</td>
+                <td style="text-align: right;">₹650.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table class="totals-table">
+        <tr>
+            <td class="label">Subtotal:</td>
+            <td class="value">₹650.00</td>
+        </tr>
+        <tr>
+            <td class="label">Discount:</td>
+            <td class="value">₹0.00</td>
+        </tr>
+        <tr class="grand-total-row">
+            <td class="label grand-total-label">Grand Total:</td>
+            <td class="value grand-total-value">₹650.00</td>
+        </tr>
+    </table>
+
+    <div class="table-layout" style="margin-top: 20px;">
+        <div class="table-row">
+            <div class="table-cell" style="width: 50%;">
+                <div class="contact-title">যোগাযোগ ও হেল্পলাইন</div>
+                <div class="contact-grid">
+                    📞 <strong>মোবাইল নম্বর:</strong> +91 9064517009<br>
+                    💬 <strong>হোয়াটসঅ্যাপ চ্যাট:</strong> +91 9064517009<br>
+                    🌐 <strong>ফেসবুক পেজ:</strong> Sudipta E-Scooty Service
+                </div>
+            </div>
+            <div class="table-cell text-right" style="width: 50%; vertical-align: bottom;">
+                <div class="disclaimer">* এটি একটি কম্পিউটার জেনারেটেড প্রফেশনাল ইনভয়েস, কোনো স্বাক্ষরের প্রয়োজন নেই।</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="thank-you-box">
+        আমাদের ওপর আস্থা রাখার জন্য আপনাকে ধন্যবাদ!
+    </div>
+
+</body>
+</html>
